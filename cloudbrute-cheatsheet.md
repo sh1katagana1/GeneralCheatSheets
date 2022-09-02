@@ -33,9 +33,11 @@ Arguments:
  ```
  
 Bruteforce target.com using the keyword 'target', looking for Buckets, 80 threads, timeout per request is 10 seconds and a path to the wordlist used in the brute force.
+``` 
+CloudBrute -d target.com -k target -m storage -t 80 -T 10 -w "./data/storage_small.txt"
+```
   
-  `CloudBrute -d target.com -k target -m storage -t 80 -T 10 -w "./data/storage_small.txt"`
-  
-  If I dont know the cloud platform of the target, and I want to specify one:
-  
-  `CloudBrute -d target.com -k keyword -m storage -t 80 -T 10 -w -c amazon -o target_output.txt`
+If I dont know the cloud platform of the target, and I want to specify one:
+```  
+CloudBrute -d target.com -k keyword -m storage -t 80 -T 10 -w -c amazon -o target_output.txt
+```
