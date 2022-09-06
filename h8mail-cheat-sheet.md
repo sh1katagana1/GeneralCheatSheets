@@ -8,8 +8,9 @@ I added export PATH="$HOME/.local/bin:$PATH" to PATH as for some reason pip didn
 type h8mail -h in any terminal and it will work
 
 UPDATE: the above wasnt working so you can run it from here:
-
+```
 `/usr/local/bin$ sudo ./h8mail --gen-config`
+```
 
 The generated h8mail template configuration file is at /usr/local/bin/h8mail-config.ini but you can save it anywhere. I created and saved the API config file at home/sh1katagana1/osint/h8mail/h8mail_config.ini
 
