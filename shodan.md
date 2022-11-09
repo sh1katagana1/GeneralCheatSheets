@@ -57,4 +57,16 @@ Find devices by server type
 server:nginx hostname:trinet.com
 ```
 
+##Shodan CLI
+
+Install
+```
+pip install -U --user shodan
+```
+Confirm its installed
+```
+shodan
+```
+
+
 
