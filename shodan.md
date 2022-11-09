@@ -57,7 +57,7 @@ Find devices by server type
 server:nginx hostname:trinet.com
 ```
 
-##Shodan CLI
+## Shodan CLI
 
 Install
 ```
@@ -66,6 +66,22 @@ pip install -U --user shodan
 Confirm its installed
 ```
 shodan
+```
+Put in your API key
+```
+shodan init YOUR_API_KEY
+```
+General searching. Usage: shodan search [OPTIONS] <search query>
+```
+shodan search nginx
+```
+Download the results. shodan download [OPTIONS] <filename> <search query> You have to use the format json.tgz
+```
+shodan download --limit 500 4-51-172-176-28.json.gz net:4.51.172.176/25
+```
+Convert to Excel from the json.tgz. shodan convert <data file> <file format>
+```
+shodan convert 4-51-172-176-28.json.gz xlsx
 ```
 
 
