@@ -83,6 +83,30 @@ Convert to Excel from the json.tgz. shodan convert <data file> <file format>
 ```
 shodan convert 4-51-172-176-28.json.gz xlsx
 ```
-
+To Parse through the json file you can use the Parse command. This one prints out all ports found in the file
+```
+  shodan parse --fields port my-results-11-22-2022.json.gz
+```
+You can use the -f for filtering. Here is a way to filter just the output that has port 443
+```
+  shodan parse -f port:443 trinet-results-11-22-2022.json.gz
+```
+To set up alerts in Shodan (when you setup Network Monitoring feature), you use the alerts keyword. To get a list of all available alerts you do
+```
+  shodan alert triggers
+```
+To enable the alerts, you need the unique ID for whatever you have setup in Network Monitoring. To see the unique ID for your asset:
+```
+  shodan alert list
+```
+You then use that ID to enable a specific alert. For example, to alert on uncommon ports:
+```
+  shodan alert enable <your unique id> uncommon
+```
+To view statistical information you use the stats command. To see ports for an asset:
+```
+  shodan stats --facets port 2.2.2.2
+```
+  
 
 
