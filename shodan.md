@@ -75,6 +75,11 @@ General searching. Usage: shodan search [OPTIONS] <search query>
 ```
 shodan search nginx
 ```
+More general searching
+```
+  shodan search --fields ip_str,port,org,hostnames microsoft iis 6.0
+```
+
 Download the results. shodan download [OPTIONS] <filename> <search query> You have to use the format json.tgz
 ```
 shodan download --limit 500 4-51-172-176-28.json.gz net:4.51.172.176/25
