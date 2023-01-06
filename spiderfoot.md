@@ -4,16 +4,17 @@
 
 To install, follow the instructions <a href="https://github.com/smicallef/spiderfoot">here</a>
 <hr>
+
 To run the webserver for it, navigate to your Spiderfoot directory and type:
+
 ```
 python3 ./sf.py -l 127.0.0.1:5001
 
 ```
+
 To use the CLI, you need to first know what the modules are named. To find this type:
+
 ```
 python3 sf.py -M
 ```
-test
-```
-test
-```
+
