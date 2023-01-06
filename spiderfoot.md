@@ -18,3 +18,17 @@ To use the CLI, you need to first know what the modules are named. To find this 
 python3 sf.py -M
 ```
 
+To run in Scan mode, I can use this (The -q is to just return the data not the debug info):
+
+```
+python3 sf.py -m sfp_dnsresolve -s binarypool.com -q
+```
+
+To run every single module:
+
+```
+python3 sf.py -s binarypool.com -q
+```
+
+
+
