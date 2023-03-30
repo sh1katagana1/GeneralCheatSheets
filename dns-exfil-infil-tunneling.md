@@ -30,7 +30,6 @@ python3 packetyGrabber.py
 
 The script will then Base58 Decode it, then Base64 Decode it. You will now have the goodies.txt file to look at and it should contain all the content that was in the securecorp.txt file. You have successfully exfiltrated the data using DNS
 
-
 ## Data Infiltration
 We want to simulate a C2-like activity of sending an encoded command to run on a victim machine. The scenario here would be that the attacker has compromised a victim machine, and has a domain/dns that has encoded commands they want to be sent to this machine without being caught as normal C2 traffic would. 
 First you want to create a domain, I would recommend using Google Domains to register a new domain. For this example, we will use wingnut.com. We are still in the directory of the github project we used in the above example as well. In this example our "malicious" command will be:
