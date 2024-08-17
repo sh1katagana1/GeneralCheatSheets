@@ -56,6 +56,10 @@ Find devices by server type
 ```
 server:nginx hostname:trinet.com
 ```
+Dark web searching. You can look for sites on the dark web by simply searching for a specific http header:
+```
+onion-location
+```
 
 ## Shodan CLI
 
