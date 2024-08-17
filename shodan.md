@@ -60,6 +60,8 @@ Dark web searching. You can look for sites on the dark web by simply searching f
 ```
 onion-location
 ```
+Another way to search for similar dark web sites is to visit one with your browsers developer tool open and Network enabled. When you get responses back from the pages you visit, you can grab a bunch header/values and search them in shodan. Try to pick less common ones so as to get better results
+
 
 ## Shodan CLI
 
